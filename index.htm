@@ -35,16 +35,16 @@
       
     var height 	= math.min([vw,vh])*0.95; // 450
     var width 	= math.min([vw,vh])*0.95;
-
-    var height_offset = 0.05*height
-    var width_offset = 0.05*width
     
     var svg = d3.select("#click") // This selects the div
-    .attr("width", width) // This defines the canvas' width
-    .attr("height", height) // This defines the canvas' height
+      .attr("width", width) // This defines the canvas' width
+      .attr("height", height) // This defines the canvas' height
     
     var xrange 	= [-3,3];
     var yrange 	= [-3,3];
+    
+    var x_limits 	= [-3,3];
+    var y_limits 	= [-3,3];
 
     // Create some basic 2D random variables
     
@@ -52,13 +52,6 @@
     
     var mu 				= [[0],[0]];
     var cov 			= [[1,0],[0,1]];
-
-		const t = d3.transition()
-    	.duration(750)
-    	.ease(d3.easeLinear);
-      
-      x_limits = xrange
-      y_limits = yrange
 
       window_x 	= [width*0.12,width*0.95];
       window_y 	= [height*0.02,height*0.89];
@@ -145,7 +138,7 @@
       .attr("r", math.sqrt(cov[0][0])/(xrange[1]-xrange[0])*width)
       .attr("cx", values_to_pixels(mu[0][0],'x'))
       .attr("cy", values_to_pixels(mu[1][0],'y'))
-      .attr("fill", "#c1f80a")
+      .attr("fill", "#f43605")
       .attr("stroke", "#666666")
       .attr("opacity", 0.)
       .attr("stroke-width", 2.5*height/450)
@@ -156,7 +149,7 @@
       .attr("r", math.sqrt(cov[0][0])/(xrange[1]-xrange[0])*width)
       .attr("cx", values_to_pixels(mu[0][0],'x'))
       .attr("cy", values_to_pixels(mu[1][0],'y'))
-      .attr("fill", "#047495")
+      .attr("fill", "#0485d1")
       .attr("stroke", "#666666")
       .attr("opacity", 0.)
       .attr("stroke-width", 2.5*height/450)
@@ -181,13 +174,13 @@
         obs 	= [[obs[0]],[obs[1]]];
         
 				d3.select("#observation")
-        	.attr("r", math.sqrt(cov_obs[0][0])/(xrange[1]-xrange[0])*width)
+        	.attr("r", math.sqrt(cov_obs[0][0])/(xrange[1]-xrange[0])*(window_x[1]-window_x[0]))
           .attr("cx", coords[0])
           .attr("cy", coords[1])
           .attr("opacity", 0.75)
         
 				d3.select("#prior")
-        	.attr("r", math.sqrt(cov[0][0])/(xrange[1]-xrange[0])*width)
+        	.attr("r", math.sqrt(cov[0][0])/(xrange[1]-xrange[0])*(window_x[1]-window_x[0]))
           .attr("cx", values_to_pixels(mu[0][0],'x'))
           .attr("cy", values_to_pixels(mu[1][0],'y'))
           
@@ -222,7 +215,7 @@
           .transition()
           	.duration(750)
             .ease(d3.easeLinear)
-        	.attr("r", math.sqrt(cov[0][0])/(xrange[1]-xrange[0])*width)
+        	.attr("r", math.sqrt(cov[0][0])/(xrange[1]-xrange[0])*(window_x[1]-window_x[0]))
           .attr("cx", values_to_pixels(mu[0][0],'x'))
           .attr("cy", values_to_pixels(mu[1][0],'y'))
           .attr("opacity",0.75)
@@ -239,12 +232,12 @@
             .attr("opacity", 0.)
 
           d3.select("#prior")
-            .attr("r", math.sqrt(cov[0][0])/(xrange[1]-xrange[0])*width)
+            .attr("r", math.sqrt(cov[0][0])/(xrange[1]-xrange[0])*(window_x[1]-window_x[0]))
             .attr("cx", values_to_pixels(mu[0][0],'x'))
             .attr("cy", values_to_pixels(mu[1][0],'y'))
             
           d3.select("#posterior")
-            .attr("r", math.sqrt(cov[0][0])/(xrange[1]-xrange[0])*width)
+            .attr("r", math.sqrt(cov[0][0])/(xrange[1]-xrange[0])*(window_x[1]-window_x[0]))
             .attr("cx", values_to_pixels(mu[0][0],'x'))
             .attr("cy", values_to_pixels(mu[1][0],'y'))
             .attr("opacity",0.)
@@ -268,11 +261,11 @@
     function pixels_to_values(coords,axis) {
     	axis = (typeof axis === 'undefined') ? 'xy' : axis;
     	if (axis == 'x') {
-      	res = coords/width * (xrange[1]-xrange[0]) + xrange[0]
+      	res = (coords-window_x[0])/(window_x[1]-window_x[0]) * (xrange[1]-xrange[0]) + xrange[0]
       } else if (axis == 'y') {
-      	res = (1.-coords/height) * (yrange[1]-yrange[0]) + yrange[0]
+      	res = (1.-(coords-window_y[0])/(window_y[1]-window_y[0])) * (yrange[1]-yrange[0]) + yrange[0]
       } else {
-      	res = [coords[0]/width * (xrange[1]-xrange[0]) + xrange[0],(1.-coords[1]/height) * (yrange[1]-yrange[0]) + yrange[0]]
+      	res = [(coords[0]-window_x[0])/(window_x[1]-window_x[0]) * (xrange[1]-xrange[0]) + xrange[0],(1.-(coords[1]-window_y[0])/(window_y[1]-window_y[0])) * (yrange[1]-yrange[0]) + yrange[0]]
       }
      	return res;
     }
@@ -280,11 +273,11 @@
     function values_to_pixels(values,axis) {
     	axis = (typeof axis === 'undefined') ? 'xy' : axis;
     	if (axis == 'x') {
-      	res = (values-xrange[0])/(xrange[1]-xrange[0])*width;
+      	res = (values-xrange[0])/(xrange[1]-xrange[0])*(window_x[1]-window_x[0])+window_x[0];
       } else if (axis == 'y') {
-      	res = (1-(values-yrange[0])/(yrange[1]-yrange[0]))*height;
+      	res = (1-(values-yrange[0])/(yrange[1]-yrange[0]))*(window_y[1]-window_y[0])+window_y[0];
       } else {
-      	res = [(values[0]-xrange[0])/(xrange[1]-xrange[0])*width,(1-(values[1]-yrange[0])/(yrange[1]-yrange[0]))*height];
+      	res = [(values[0]-xrange[0])/(xrange[1]-xrange[0])*(window_x[1]-window_x[0])+window_x[0],(1-(values[1]-yrange[0])/(yrange[1]-yrange[0]))*(window_y[1]-window_y[0])+window_y[0]];
       }
      	return res;
     }
